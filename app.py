@@ -314,7 +314,6 @@ with col2:
     st.write('ini nanti bakal diisi hasil analisis setiap tahun kemudian rangkuman untuk 2022-2024.')   
 
 # Menampilkan plot di Streamlit
-st.pyplot(fig)
 # Fungsi untuk konversi ke Excel
 def to_excel(df):
     output = BytesIO()
