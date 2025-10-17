@@ -7,7 +7,7 @@ import numpy as np
 st.set_page_config(
     page_title='Analisis Pengangguran Kota Batu',
     layout='wide',
-    initial_sidebar_state='collapsed',
+    initial_sidebar_state='expanded',
 )
 
 def main():

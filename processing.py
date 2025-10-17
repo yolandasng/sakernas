@@ -40,8 +40,6 @@ data['hubungan_dengan_krt'] = data['hubungan_dengan_krt'].map({1: 'Kepala Rumah 
 # Mengubah kolom jenis_kelamin dari angka menjadi teks
 data['jenis_kelamin'] = data['jenis_kelamin'].map({1: 'Laki-laki', 2: 'Perempuan'})
 
-# Mengubah kolom status_perkawinan dari angka menjadi teks
-data['status_perkawinan'] = data['status_perkawinan'].map({1: 'Belum Kawin', 2: 'Kawin', 3: 'Cerai Hidup', 4: 'Cerai Mati'})
 
 # Mengubah kolom partisipasi_sekolah dari angka menjadi teks
 data['partisipasi_sekolah'] = data['partisipasi_sekolah'].map({1: 'Belum Bersekolah', 2: 'Masih Bersekolah', 3: 'Tidak Bersekolah Lagi'})
@@ -61,9 +59,6 @@ data['pernah_pelatihan'] = data['pernah_pelatihan'].map({1: 'Ya', 2: 'Tidak'})
 
 # Mengubah kolom sertifikat_pelatihan dari angka menjadi teks
 data['sertifikat_pelatihan'] = data['sertifikat_pelatihan'].map({0: '-', 1: 'Ya', 2: 'Tidak'})
-
-# Menampilkan beberapa baris pertama untuk memastikan perubahan
-data.head()
 
 # Mengubah kolom disabilitas_penglihatan dari angka menjadi teks
 data['disabilitas_penglihatan'] = data['disabilitas_penglihatan'].map({1: 'Ya, sama sekali tidak bisa melihat', 2: 'Ya, banyak kesulitan', 3: 'Ya, sedikit kesulitan', 4: 'Tidak mengalami kesulitan'})
@@ -221,20 +216,11 @@ data['tahun_lulus_d4_s1'] = data.apply(lambda row: assign_graduation_year(row['p
 data['tahun_lulus_s2_s2_terapan'] = data.apply(lambda row: assign_graduation_year(row['pendidikan_tertinggi'], row['tahun_lulus_pendidikan']) if 'S2/S2 Terapan' in row['pendidikan_tertinggi'] else '-', axis=1)
 data['tahun_lulus_s3'] = data.apply(lambda row: assign_graduation_year(row['pendidikan_tertinggi'], row['tahun_lulus_pendidikan']) if 'S3' in row['pendidikan_tertinggi'] else '-', axis=1)
 
-# Memeriksa tipe data tiap kolom
-print(data.dtypes)
-
 # Mengonversi beberapa kolom agar tetap bertipe data kategorikal
 data['jml_art'] = data['jml_art'].astype('object')
 data['jml_art_5th_keatas'] = data['jml_art_5th_keatas'].astype('object')
 data['kelompok_5_tahun'] = data['kelompok_5_tahun'].astype('object')
 data['kategori_umur'] = data['kategori_umur'].astype('object')
-
-# Memeriksa tipe data tiap kolom
-print(data.dtypes)
-
-# Deskripsi statistik untuk kolom numerik
-data.describe()
 
 # Deskripsi statistik untuk kolom kategorikal
 data.describe(include=['object'])
@@ -245,5 +231,943 @@ numeric_columns = data.select_dtypes(include=['float64', 'int64']).columns
 # Menghitung rata-rata tertimbang untuk seluruh data
 weighted_avg_all = (data[numeric_columns].multiply(data['penimbang'], axis=0)).sum() / data['penimbang'].sum()
 
-# Menampilkan hasil rata-rata tertimbang untuk seluruh data
-print(weighted_avg_all)
+# Segmentasi berdasarkan klasifikasi desa/kota dengan bobot
+segment_desa_kota_weighted = data.groupby('klasifikasi_desa_kota').apply(lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi desa/kota gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='klasifikasi_desa_kota', y='total_penimbang', data=segment_desa_kota_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Desa/Kota Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Desa/Kota')
+plt.show()
+
+# Segmentasi berdasarkan klasifikasi jumlah anggota rumah tangga dengan bobot
+segment_jml_art_weighted = data.groupby('jml_art').apply(lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi jumlah anggota rumah tangga gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='jml_art', y='total_penimbang', data=segment_jml_art_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Jumlah Anggota Rumah Tangga Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Jumlah Anggota Rumah Tangga')
+plt.show()
+
+# Segmentasi berdasarkan klasifikasi jumlah anggota rumah tangga yang berumur 5 tahun ke atas dengan bobot
+segment_jml_art_5th_keatas_weighted = data.groupby('jml_art_5th_keatas').apply(lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi jumlah anggota rumah tangga yang berumur 5 tahun ke atas gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='jml_art_5th_keatas', y='total_penimbang', data=segment_jml_art_5th_keatas_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Jumlah Anggota Rumah Tangga yang Berumur 5 Tahun ke Atas Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Jumlah Anggota Rumah Tangga yang Berumur 5 Tahun ke Atas')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Kepala Rumah Tangga', 'Istri/Suami', 'Anak Kandung', 'Anak Tiri/Angkat', 'Menantu', 'Cucu', 'Orang Tua/Mertua', 'Famili Lain', 'Pembantu Rumah Tangga', 'Sopir/Tukang Kebun', 'Lainnya']
+
+# Segmentasi berdasarkan klasifikasi hubungan dengan kepala rumah tangga dengan bobot
+segment_hubungan_dengan_krt_weighted = data.groupby('hubungan_dengan_krt').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_hubungan_dengan_krt_weighted['hubungan_dengan_krt'] = pd.Categorical(segment_hubungan_dengan_krt_weighted['hubungan_dengan_krt'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['hubungan_dengan_krt'])
+segment_hubungan_dengan_krt_weighted = all_categories.merge(segment_hubungan_dengan_krt_weighted, on='hubungan_dengan_krt', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi hubungan dengan kepala rumah tangga gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='hubungan_dengan_krt', y='total_penimbang', data=segment_hubungan_dengan_krt_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Hubungan dengan Kepala Rumah Tangga Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Hubungan dengan Kepala Rumah Tangga')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Visualisasi frekuensi tertimbang berdasarkan jenis kelamin
+segment_jenis_kelamin_weighted = data.groupby('jenis_kelamin').apply(lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk data gabungan dari semua tahun
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='jenis_kelamin', y='total_penimbang', data=segment_jenis_kelamin_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Jenis Kelamin Berdasarkan Penimbang (Gabungan Data)')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Jenis Kelamin')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Generasi Alpha', 'Generasi Z', 'Milenial', 'Generasi X', 'Baby Boomers', 'Silent Generation']
+
+# Segmentasi berdasarkan klasifikasi generasi dengan bobot
+segment_generasi_weighted = data.groupby('generasi').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_generasi_weighted['generasi'] = pd.Categorical(segment_generasi_weighted['generasi'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['generasi'])
+segment_generasi_weighted = all_categories.merge(segment_generasi_weighted, on='generasi', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi generasi gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='generasi', y='total_penimbang', data=segment_generasi_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Generasi Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Generasi')
+plt.show()
+
+# Segmentasi berdasarkan klasifikasi kelompok umur 5 tahunan dengan bobot
+segment_kelompok_5_tahun_weighted = data.groupby('kelompok_5_tahun').apply(lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi kelompok umur 5 tahunan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='kelompok_5_tahun', y='total_penimbang', data=segment_kelompok_5_tahun_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Kelompok Umur 5 Tahunan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Kelompok Umur 5 Tahunan')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Anak-anak', 'Dewasa Muda', 'Dewasa', 'Lansia']
+
+# Segmentasi berdasarkan klasifikasi kategori umur dengan bobot
+segment_kategori_umur_weighted = data.groupby('kategori_umur').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_kategori_umur_weighted['kategori_umur'] = pd.Categorical(segment_kategori_umur_weighted['kategori_umur'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['kategori_umur'])
+segment_kategori_umur_weighted = all_categories.merge(segment_kategori_umur_weighted, on='kategori_umur', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi kategori umur gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='kategori_umur', y='total_penimbang', data=segment_kategori_umur_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Kategori Umur Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Kategori Umur')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati']
+
+# Segmentasi berdasarkan klasifikasi status perkawinan dengan bobot
+segment_status_perkawinan_weighted = data.groupby('status_perkawinan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_status_perkawinan_weighted['status_perkawinan'] = pd.Categorical(segment_status_perkawinan_weighted['status_perkawinan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['status_perkawinan'])
+segment_status_perkawinan_weighted = all_categories.merge(segment_status_perkawinan_weighted, on='status_perkawinan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi status perkawinan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='status_perkawinan', y='total_penimbang', data=segment_status_perkawinan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Status Perkawinan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Status Perkawinan')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Tidak/Belum Tamat SD', 'SD/MI/SDLB/Paket A', 'SMP/MTs/SMPLB/Paket B',
+                   'SMA/SMK/MA/MAK/SMLB/Paket C', 'D1/D2/D3', 'D4/S1', 'S2/S2 Terapan', 'S3']
+
+# Segmentasi berdasarkan klasifikasi pendidikan tertinggi dengan bobot
+segment_pendidikan_tertinggi_weighted = data.groupby('pendidikan_tertinggi').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_pendidikan_tertinggi_weighted['pendidikan_tertinggi'] = pd.Categorical(segment_pendidikan_tertinggi_weighted['pendidikan_tertinggi'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['pendidikan_tertinggi'])
+segment_pendidikan_tertinggi_weighted = all_categories.merge(segment_pendidikan_tertinggi_weighted, on='pendidikan_tertinggi', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi pendidikan tertinggi gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='pendidikan_tertinggi', y='total_penimbang', data=segment_pendidikan_tertinggi_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Pendidikan Tertinggi Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Pendidikan Tertinggi')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penyelenggara pendidikan yang tidak "-"
+data_filtered = data[data['penyelenggara_pendidikan'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Negeri', 'Swasta', 'Kedinasan',
+                   'Tidak Tahu']
+
+# Segmentasi berdasarkan klasifikasi penyelenggara pendidikan dengan bobot
+segment_penyelenggara_pendidikan_weighted = data.groupby('penyelenggara_pendidikan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_penyelenggara_pendidikan_weighted['penyelenggara_pendidikan'] = pd.Categorical(segment_penyelenggara_pendidikan_weighted['penyelenggara_pendidikan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['penyelenggara_pendidikan'])
+segment_penyelenggara_pendidikan_weighted = all_categories.merge(segment_penyelenggara_pendidikan_weighted, on='penyelenggara_pendidikan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penyelenggara pendidikan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='penyelenggara_pendidikan', y='total_penimbang', data=segment_penyelenggara_pendidikan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Penyelenggara Pendidikan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Penyelenggara Pendidikan')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus SD/Sederajat yang tidak "-"
+data_filtered = data[data['tahun_lulus_sd_sederajat'] != '-']
+
+# Segmentasi berdasarkan tahun lulus SD/Sederajat dengan bobot
+segment_tahun_lulus_sd_sederajat_weighted = data_filtered.groupby('tahun_lulus_sd_sederajat').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus SD/Sederajat
+plt.figure(figsize=(15, 6))
+ax = sns.barplot(x='tahun_lulus_sd_sederajat', y='total_penimbang', data=segment_tahun_lulus_sd_sederajat_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus SD/Sederajat')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus SD/Sederajat')
+plt.xticks(rotation=45)
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus SMP/Sederajat yang tidak "-"
+data_filtered = data[data['tahun_lulus_smp_sederajat'] != '-']
+
+# Segmentasi berdasarkan tahun lulus SMP/Sederajat dengan bobot
+segment_tahun_lulus_smp_sederajat_weighted = data_filtered.groupby('tahun_lulus_smp_sederajat').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus SMP/Sederajat
+plt.figure(figsize=(15, 6))
+ax = sns.barplot(x='tahun_lulus_smp_sederajat', y='total_penimbang', data=segment_tahun_lulus_smp_sederajat_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus SMP/Sederajat')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus SMP/Sederajat')
+plt.xticks(rotation=45)
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus SMA/Sederajat yang tidak "-"
+data_filtered = data[data['tahun_lulus_sma_sederajat'] != '-']
+
+# Segmentasi berdasarkan tahun lulus SMA/Sederajat dengan bobot
+segment_tahun_lulus_sma_sederajat_weighted = data_filtered.groupby('tahun_lulus_sma_sederajat').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus SMA/Sederajat
+plt.figure(figsize=(15, 6))
+ax = sns.barplot(x='tahun_lulus_sma_sederajat', y='total_penimbang', data=segment_tahun_lulus_sma_sederajat_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus SMA/Sederajat')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus SMA/Sederajat')
+plt.xticks(rotation=45)
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus D1/D2/D3 yang tidak "-"
+data_filtered = data[data['tahun_lulus_d1_d2_d3'] != '-']
+
+# Segmentasi berdasarkan tahun lulus D1/D2/D3 dengan bobot
+segment_tahun_lulus_d1_d2_d3_weighted = data_filtered.groupby('tahun_lulus_d1_d2_d3').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus D1/D2/D3
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='tahun_lulus_d1_d2_d3', y='total_penimbang', data=segment_tahun_lulus_d1_d2_d3_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus D1/D2/D3')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus D1/D2/D3')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus D4/S1 yang tidak "-"
+data_filtered = data[data['tahun_lulus_d4_s1'] != '-']
+
+# Segmentasi berdasarkan tahun lulus D4/S1 dengan bobot
+segment_tahun_lulus_d4_s1_weighted = data_filtered.groupby('tahun_lulus_d4_s1').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus D4/S1
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='tahun_lulus_d4_s1', y='total_penimbang', data=segment_tahun_lulus_d4_s1_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus D4/S1')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus D4/S1')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan tahun lulus S2/S2 Terapan yang tidak "-"
+data_filtered = data[data['tahun_lulus_s2_s2_terapan'] != '-']
+
+# Segmentasi berdasarkan tahun lulus S2/S2 Terapan dengan bobot
+segment_tahun_lulus_s2_s2_terapan_weighted = data_filtered.groupby('tahun_lulus_s2_s2_terapan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Membuat bar plot untuk distribusi tahun lulus S2/S2 Terapan
+plt.figure(figsize=(3, 6))
+ax = sns.barplot(x='tahun_lulus_s2_s2_terapan', y='total_penimbang', data=segment_tahun_lulus_s2_s2_terapan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+# Menambahkan label dan judul
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus S2/S2 Terapan')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus S2/S2 Terapan')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['S3']
+
+# Segmentasi berdasarkan tahun lulus S3 dengan bobot
+segment_tahun_lulus_s3_weighted = data.groupby('tahun_lulus_s3').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_tahun_lulus_s3_weighted['tahun_lulus_s3'] = pd.Categorical(segment_tahun_lulus_s3_weighted['tahun_lulus_s3'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['tahun_lulus_s3'])
+segment_tahun_lulus_s3_weighted = all_categories.merge(segment_tahun_lulus_s3_weighted, on='tahun_lulus_s3', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi tahun lulus S3 gabungan
+plt.figure(figsize=(3, 6))
+ax = sns.barplot(x='tahun_lulus_s3', y='total_penimbang', data=segment_tahun_lulus_s3_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Penimbang Berdasarkan Tahun Lulus S3')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Tahun Lulus S3')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan pernah pelatihan yang tidak "-"
+data_filtered = data[data['pernah_pelatihan'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi pernah pelatihan dengan bobot
+segment_pernah_pelatihan_weighted = data.groupby('pernah_pelatihan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_pernah_pelatihan_weighted['pernah_pelatihan'] = pd.Categorical(segment_pernah_pelatihan_weighted['pernah_pelatihan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['pernah_pelatihan'])
+segment_pernah_pelatihan_weighted = all_categories.merge(segment_pernah_pelatihan_weighted, on='pernah_pelatihan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi pernah pelatihan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='pernah_pelatihan', y='total_penimbang', data=segment_pernah_pelatihan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Pernah Pelatihan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Pernah Pelatihan')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan sertifikat pelatihan yang tidak "-"
+data_filtered = data[data['sertifikat_pelatihan'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi sertifikat pelatihan dengan bobot
+segment_sertifikat_pelatihan_weighted = data.groupby('sertifikat_pelatihan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_sertifikat_pelatihan_weighted['sertifikat_pelatihan'] = pd.Categorical(segment_sertifikat_pelatihan_weighted['sertifikat_pelatihan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['sertifikat_pelatihan'])
+segment_sertifikat_pelatihan_weighted = all_categories.merge(segment_sertifikat_pelatihan_weighted, on='sertifikat_pelatihan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi sertifikat pelatihan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='sertifikat_pelatihan', y='total_penimbang', data=segment_sertifikat_pelatihan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Sertifikat Pelatihan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Sertifikat Pelatihan')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya, sama sekali tidak bisa melihat', 'Ya, banyak kesulitan', 'Ya, sedikit kesulitan', 'Tidak mengalami kesulitan']
+
+# Segmentasi berdasarkan klasifikasi disabilitas penglihatan dengan bobot
+segment_disabilitas_penglihatan_weighted = data.groupby('disabilitas_penglihatan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_disabilitas_penglihatan_weighted['disabilitas_penglihatan'] = pd.Categorical(segment_disabilitas_penglihatan_weighted['disabilitas_penglihatan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['disabilitas_penglihatan'])
+segment_disabilitas_penglihatan_weighted = all_categories.merge(segment_disabilitas_penglihatan_weighted, on='disabilitas_penglihatan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi disabilitas penglihatan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='disabilitas_penglihatan', y='total_penimbang', data=segment_disabilitas_penglihatan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Disabilitas Penglihatan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Disabilitas Penglihatan')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya, sama sekali tidak bisa mendengar', 'Ya, banyak kesulitan', 'Ya, sedikit kesulitan', 'Tidak mengalami kesulitan']
+
+# Segmentasi berdasarkan klasifikasi disabilitas pendengaran dengan bobot
+segment_disabilitas_pendengaran_weighted = data.groupby('disabilitas_pendengaran').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_disabilitas_pendengaran_weighted['disabilitas_pendengaran'] = pd.Categorical(segment_disabilitas_pendengaran_weighted['disabilitas_pendengaran'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['disabilitas_pendengaran'])
+segment_disabilitas_pendengaran_weighted = all_categories.merge(segment_disabilitas_pendengaran_weighted, on='disabilitas_pendengaran', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi disabilitas pendengaran gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='disabilitas_pendengaran', y='total_penimbang', data=segment_disabilitas_pendengaran_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Disabilitas Pendengaran Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Disabilitas Pendengaran')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya, sama sekali tidak bisa menggunakan/menggerakkan tangan/jari', 'Ya, banyak kesulitan', 'Ya, sedikit kesulitan', 'Tidak mengalami kesulitan']
+
+# Segmentasi berdasarkan klasifikasi disabilitas tangan dengan bobot
+segment_disabilitas_tangan_weighted = data.groupby('disabilitas_tangan').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_disabilitas_tangan_weighted['disabilitas_tangan'] = pd.Categorical(segment_disabilitas_tangan_weighted['disabilitas_tangan'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['disabilitas_tangan'])
+segment_disabilitas_tangan_weighted = all_categories.merge(segment_disabilitas_tangan_weighted, on='disabilitas_tangan', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi disabilitas tangan gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='disabilitas_tangan', y='total_penimbang', data=segment_disabilitas_tangan_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Disabilitas Tangan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Disabilitas Tangan')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya, sama sekali tidak bisa memahami/dipahami/berkomunikasi', 'Ya, banyak kesulitan', 'Ya, sedikit kesulitan', 'Tidak mengalami kesulitan']
+
+# Segmentasi berdasarkan klasifikasi disabilitas komunikasi dengan bobot
+segment_disabilitas_komunikasi_weighted = data.groupby('disabilitas_komunikasi').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_disabilitas_komunikasi_weighted['disabilitas_komunikasi'] = pd.Categorical(segment_disabilitas_komunikasi_weighted['disabilitas_komunikasi'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['disabilitas_komunikasi'])
+segment_disabilitas_komunikasi_weighted = all_categories.merge(segment_disabilitas_komunikasi_weighted, on='disabilitas_komunikasi', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi disabilitas komunikasi gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='disabilitas_komunikasi', y='total_penimbang', data=segment_disabilitas_komunikasi_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Disabilitas Komunikasi Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Disabilitas Komunikasi')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penggunaan komputer yang tidak "-"
+data_filtered = data[data['utama_pc'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi penggunaan komputer dengan bobot
+segment_utama_pc_weighted = data.groupby('utama_pc').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_utama_pc_weighted['utama_pc'] = pd.Categorical(segment_utama_pc_weighted['utama_pc'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['utama_pc'])
+segment_utama_pc_weighted = all_categories.merge(segment_utama_pc_weighted, on='utama_pc', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penggunaan komputer gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='utama_pc', y='total_penimbang', data=segment_utama_pc_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Penggunaan Komputer Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Penggunaan Komputer')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penggunaan HP yang tidak "-"
+data_filtered = data[data['utama_hp'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi penggunaan HP dengan bobot
+segment_utama_hp_weighted = data.groupby('utama_hp').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_utama_hp_weighted['utama_hp'] = pd.Categorical(segment_utama_hp_weighted['utama_hp'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['utama_hp'])
+segment_utama_hp_weighted = all_categories.merge(segment_utama_hp_weighted, on='utama_hp', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penggunaan HP gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='utama_hp', y='total_penimbang', data=segment_utama_hp_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Penggunaan HP Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Penggunaan HP')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penggunaan teknologi lainnya yang tidak "-"
+data_filtered = data[data['utama_teknologi_lain'] != '-']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi penggunaan teknologi lainnya dengan bobot
+segment_utama_teknologi_lain_weighted = data.groupby('utama_teknologi_lain').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_utama_teknologi_lain_weighted['utama_teknologi_lain'] = pd.Categorical(segment_utama_teknologi_lain_weighted['utama_teknologi_lain'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['utama_teknologi_lain'])
+segment_utama_teknologi_lain_weighted = all_categories.merge(segment_utama_teknologi_lain_weighted, on='utama_teknologi_lain', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penggunaan teknologi lainnya gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='utama_teknologi_lain', y='total_penimbang', data=segment_utama_teknologi_lain_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Penggunaan Teknologi Lainnya Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Penggunaan Teknologi Lainnya')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penggunaan teknologi lainnya yang tidak "-"
+data_filtered = data[data['terdaftar_prakerja'] != '0']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi penggunaan teknologi lainnya dengan bobot
+segment_terdaftar_prakerja_weighted = data.groupby('terdaftar_prakerja').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_terdaftar_prakerja_weighted['terdaftar_prakerja'] = pd.Categorical(segment_terdaftar_prakerja_weighted['terdaftar_prakerja'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['terdaftar_prakerja'])
+segment_terdaftar_prakerja_weighted = all_categories.merge(segment_terdaftar_prakerja_weighted, on='terdaftar_prakerja', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penggunaan teknologi lainnya gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='terdaftar_prakerja', y='total_penimbang', data=segment_terdaftar_prakerja_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Terdaftar Prakerja')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Terdaftar Prakerja')
+plt.show()
+
+# Filter data untuk hanya menampilkan baris dengan penggunaan teknologi lainnya yang tidak "-"
+data_filtered = data[data['kerja_sebelumnya'] != '0']
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = ['Ya', 'Tidak']
+
+# Segmentasi berdasarkan klasifikasi penggunaan teknologi lainnya dengan bobot
+segment_terdaftar_prakerja_weighted = data.groupby('kerja_sebelumnya').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_terdaftar_prakerja_weighted['kerja_sebelumnya'] = pd.Categorical(segment_terdaftar_prakerja_weighted['kerja_sebelumnya'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['kerja_sebelumnya'])
+segment_terdaftar_prakerja_weighted = all_categories.merge(segment_terdaftar_prakerja_weighted, on='kerja_sebelumnya', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi penggunaan teknologi lainnya gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='kerja_sebelumnya', y='total_penimbang', data=segment_terdaftar_prakerja_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Apakah Pernah Bekerja Sebelumnya')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Pernah Kerja Sebelumnya')
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = [
+    'Berusaha sendiri',
+    'Berusaha dibantu pekerja tidak tetap/pekerja keluarga/tidak dibayar',
+    'Berusaha dibantu pekerja tetap dan dibayar',
+    'Buruh/karyawan/pegawai',
+    'Pekerja bebas di pertanian',
+    'Pekerja bebas di nonpertanian',
+    'Pekerja keluarga/tidak dibayar'
+]
+
+# Filter data to only include rows with valid 'status_kerja' categories
+data_filtered = data[data['status_kerja'].isin(kategori_urutan)]
+
+# Segmentasi berdasarkan klasifikasi alasan tidak mencari pekerjaan dalam seminggu terakhir dengan bobot
+segment_status_kerja_weighted = data_filtered.groupby('status_kerja').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_status_kerja_weighted['status_kerja'] = pd.Categorical(segment_status_kerja_weighted['status_kerja'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['status_kerja'])
+segment_status_kerja_weighted = all_categories.merge(segment_status_kerja_weighted, on='status_kerja', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi alasan tidak mencari pekerjaan dalam seminggu terakhir gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='status_kerja', y='total_penimbang', data=segment_status_kerja_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Pekerjaan Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Pekerjaan')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+# Menentukan urutan kategori yang diinginkan
+kategori_urutan = [
+    'PHK',
+    'Usaha terhenti/bangkrut',
+    'Pendapatan kurang memuaskan',
+    'Tidak cocok dengan lingkungan kerja',
+    'Habis masa kerja/kontrak',
+    'Mengurus rumah tangga',
+    'Lainnya'
+]
+
+# Filter data to only include rows with valid 'alasan_berhenti_kerja' categories
+data_filtered = data[data['alasan_berhenti_kerja'].isin(kategori_urutan)]
+
+# Segmentasi berdasarkan klasifikasi alasan tidak mencari pekerjaan dalam seminggu terakhir dengan bobot
+segment_alasan_berhenti_kerja_weighted = data_filtered.groupby('alasan_berhenti_kerja').apply(
+    lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+# Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+segment_alasan_berhenti_kerja_weighted['alasan_berhenti_kerja'] = pd.Categorical(segment_alasan_berhenti_kerja_weighted['alasan_berhenti_kerja'], categories=kategori_urutan, ordered=True)
+
+# Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+all_categories = pd.DataFrame(kategori_urutan, columns=['alasan_berhenti_kerja'])
+segment_alasan_berhenti_kerja_weighted = all_categories.merge(segment_alasan_berhenti_kerja_weighted, on='alasan_berhenti_kerja', how='left').fillna({'total_penimbang': 0})
+
+# Membuat bar plot untuk distribusi alasan tidak mencari pekerjaan dalam seminggu terakhir gabungan
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x='alasan_berhenti_kerja', y='total_penimbang', data=segment_alasan_berhenti_kerja_weighted)
+
+# Menambahkan angka di atas setiap batang
+for p in ax.patches:
+    ax.annotate(f'{p.get_height():.0f}',
+                (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center',
+                fontsize=10, color='black',
+                xytext=(0, 5), textcoords='offset points')
+
+plt.title('Distribusi Klasifikasi Alasan Berhenti Bekerja Berdasarkan Penimbang')
+plt.ylabel('Total Penimbang')
+plt.xlabel('Klasifikasi Alasan Berhenti Bekerja')
+plt.xticks(rotation=45, ha="right")
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
