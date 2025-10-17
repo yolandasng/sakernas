@@ -32,18 +32,21 @@ data_tahun = {
         "total_penduduk": 216_735,
         "total_angkatan_kerja": Jml_AktKerja_2022,
         "pengangguran_absolut": jml_pengangguran_2022,
+        "TPAK": 71.51,  # TPAK 2022
         "data_df": df_2022
     },
     2023: {
         "total_penduduk": 218_802,
         "total_angkatan_kerja": Jml_AktKerja_2023,
         "pengangguran_absolut": jml_pengangguran_2023,
+        "TPAK": 78.99,  # TPAK 2023
         "data_df": df_2023
     },
     2024: {
         "total_penduduk": 222_690,
         "total_angkatan_kerja": Jml_AktKerja_2024,
         "pengangguran_absolut": jml_pengangguran_2024,
+        "TPAK": 75.53,  # TPAK 2024
         "data_df": df_2024
     }
 }
@@ -98,8 +101,12 @@ if st.session_state.page_selection == "Karaketeristik Pengangguran Kota Batu":
     df = pd.DataFrame(hasil_persentase)
 
     # Membuat line chart menggunakan Plotly Express
-    fig = px.line(df, x="Tahun", y="persentase", title="Persentase Pengangguran Kota Batu (2022-2024)",
+    fig = px.line(df, x="Tahun", y="persentase", title="Persentase Tingkat Pengangguran Kota Batu (2022-2024)",
                 labels={"persentase": "Persentase Pengangguran (%)", "Tahun": "Tahun"})
+    
+    # setelah fig = px.line(...)
+    fig.update_yaxes(range=[0, 10], dtick=1, title_text="Persentase Pengangguran (%)")
+    # st.plotly_chart(fig, use_container_width=True)
 
     # Add values to the line chart
     fig.update_traces(text=df['persentase'], textposition='top center', mode='lines+markers+text', line=dict(color="#636CCB"))
@@ -128,46 +135,103 @@ if st.session_state.page_selection == "Karaketeristik Pengangguran Kota Batu":
     }
 
     with col1:
-        kategori_urutan = ['Generasi Z', 'Milenial', 'Generasi X', 'Baby Boomers', 'Silent Generation']
+        # Pilih tahun yang akan dipilih
+        tahun = st.selectbox("Pilih Tahun", ['2022', '2023', '2024'])
 
-        segment_generasi_weighted = data.groupby('generasi').apply(
+        # Pilih Data yang Sesuai dengan Tahun yang Dipilih
+        if tahun == '2022':
+            data_selected = df_2022
+        elif tahun == '2023':
+            data_selected = df_2023
+        else:
+            data_selected = df_2024
+
+        # Menentukan urutan kategori yang diinginkan
+        kategori_urutan = ['Anak-anak', 'Dewasa Muda', 'Dewasa', 'Lansia']
+
+        # Segmentasi berdasarkan klasifikasi kategori umur dengan bobot
+        segment_kategori_umur_weighted = data_selected.groupby('kategori_umur').apply(
             lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
 
-        segment_generasi_weighted['generasi'] = pd.Categorical(
-            segment_generasi_weighted['generasi'], categories=kategori_urutan, ordered=True)
+        # Mengurutkan berdasarkan urutan kategori yang telah ditentukan
+        segment_kategori_umur_weighted['kategori_umur'] = pd.Categorical(
+            segment_kategori_umur_weighted['kategori_umur'], categories=kategori_urutan, ordered=True)
 
-        all_categories = pd.DataFrame(kategori_urutan, columns=['generasi'])
-        segment_generasi_weighted = all_categories.merge(
+        # Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+        all_categories = pd.DataFrame(kategori_urutan, columns=['kategori_umur'])
+        segment_kategori_umur_weighted = all_categories.merge(
+            segment_kategori_umur_weighted, on='kategori_umur', how='left').fillna({'total_penimbang': 0})
+
+        # Menampilkan judul halaman
+        st.title(f"Karakteristik Pengangguran Kota Batu - Tahun {tahun}")
+
+        # Membuat bar chart untuk total pengangguran berdasarkan kategori umur
+        fig = px.bar(segment_kategori_umur_weighted, 
+                    x='kategori_umur', 
+                    y='total_penimbang', 
+                    title=f"Total Pengangguran Berdasarkan Kategori Umur Tahun {tahun}",
+                    labels={'kategori_umur': 'Kategori Umur', 'total_penimbang': 'Total Pengangguran'},
+                    color='kategori_umur',  # Menambahkan warna untuk setiap kategori umur
+                    text='total_penimbang')  # Menambahkan nilai pada batang
+
+        # Menyesuaikan layout grafik
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',  # Latar belakang transparan
+            paper_bgcolor='rgba(0,0,0,0)',  # Latar belakang kertas transparan
+            showlegend=False,  # Menyembunyikan legenda
+            xaxis=dict(showgrid=False),  # Menghilangkan grid pada sumbu-X
+            yaxis=dict(showgrid=False)   # Menghilangkan grid pada sumbu-Y
+        )
+
+        # Menampilkan grafik di Streamlit
+        st.plotly_chart(fig)
+
+        # 2. DISTRIBUSI GENERASI
+        st.subheader("👥 Distribusi Klasifikasi Generasi Berdasarkan Penimbang")
+
+        # Menentukan urutan kategori generasi
+        kategori_urutan_generasi = ['Generasi Z', 'Milenial', 'Generasi X', 'Baby Boomers', 'Silent Generation']
+
+        # Segmentasi berdasarkan generasi dengan bobot
+        segment_generasi_weighted = data_selected.groupby('generasi').apply(
+            lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
+
+        # Mengurutkan berdasarkan urutan kategori generasi yang telah ditentukan
+        segment_generasi_weighted['generasi'] = pd.Categorical(
+            segment_generasi_weighted['generasi'], categories=kategori_urutan_generasi, ordered=True)
+
+        # Membuat DataFrame baru dengan semua kategori yang ada, termasuk yang tidak ada datanya (set total_penimbang=0)
+        all_categories_generasi = pd.DataFrame(kategori_urutan_generasi, columns=['generasi'])
+        segment_generasi_weighted = all_categories_generasi.merge(
             segment_generasi_weighted, on='generasi', how='left').fillna({'total_penimbang': 0})
 
         # Convert total_penimbang to percentage
         segment_generasi_weighted['persentase'] = ((segment_generasi_weighted['total_penimbang'] / segment_generasi_weighted['total_penimbang'].sum()) * 100).round(2)
 
         # Plotly Bar Chart
-        fig = px.bar(segment_generasi_weighted, x='generasi', y='persentase',
-                    title='Distribusi Generasi (2022-2024) dalam Persentase',
-                    labels={'persentase': 'Persentase (%)', 'generasi': 'Generasi'},
-                    text='persentase', # Show the percentage values on top of bars
-                    color='generasi', # Color each bar by generasi
-                    color_discrete_sequence=["#636CCB"] # Customize color
-                    )
+        fig_generasi = px.bar(segment_generasi_weighted, x='generasi', y='persentase',
+                            title=f'Distribusi Generasi Tahun {tahun} dalam Persentase',
+                            labels={'persentase': 'Persentase (%)', 'generasi': 'Generasi'},
+                            text='persentase',  # Show the percentage values on top of bars
+                            color='generasi',  # Color each bar by generasi
+                            color_discrete_sequence=["#636CCB"]  # Customize color
+                            )
 
         # Update layout for better visual appeal and remove background
-        fig.update_layout(
+        fig_generasi.update_layout(
             xaxis_tickangle=45,
             title_x=0,  # Center the title
             title_font_size=16,
             margin=dict(l=50, r=50, t=50, b=50),  # Adjust margins
             showlegend=False,  # Hide the legend
             plot_bgcolor='rgba(0,0,0,0)',  # Transparent background
-            paper_bgcolor='rgba(0,0,0,0)' , # Transparent paper background
+            paper_bgcolor='rgba(0,0,0,0)',  # Transparent paper background
             xaxis=dict(showgrid=False),  # Remove x-axis grid lines
-            yaxis=dict(showgrid = False)
+            yaxis=dict(showgrid=False)
         )
 
         # Show the plot
-        st.plotly_chart(fig)
-    
+        st.plotly_chart(fig_generasi)    
     # Menentukan urutan kategori yang diinginkan
     kategori_urutan = ['Tidak/Belum Tamat SD', 'SD/MI/SDLB/Paket A', 'SMP/MTs/SMPLB/Paket B',
                     'SMA/SMK/MA/MAK/SMLB/Paket C', 'D1/D2/D3', 'D4/S1', 'S2/S2 Terapan', 'S3']
@@ -640,54 +704,20 @@ if st.session_state.page_selection == "Data Pertahun":
         pengangguran_persen = (jml_pengangguran / tahun_data["total_angkatan_kerja"]) * 100
         
         # Membuat kolom-kolom untuk cards
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.markdown(create_card("Total Penduduk", tahun_data["total_penduduk"]), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_card("Total Angkatan Kerja", tahun_data["total_angkatan_kerja"]), unsafe_allow_html=True)
+            st.markdown(create_card("Jumlah Angkatan Kerja", tahun_data["total_angkatan_kerja"]), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_card(f"Jumlah Pengangguran {tahun}", jml_pengangguran), unsafe_allow_html=True)
-
+            st.markdown(create_card(f"Jumlah Pengangguran", jml_pengangguran), unsafe_allow_html=True)
+        with col4:
+            st.markdown(create_card("TPAK", tahun_data["TPAK"], is_percentage=False), unsafe_allow_html=True)
+            
     # Function untuk visualisasi berdasarkan tahun
     def display_visualizations(tahun_data, tahun):
-        data_filtered = tahun_data["data_df"]    
-        # 1. Kategori Umur
-        st.write("### Visualisasi Distribusi Kategori Umur")
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            bins_age_category = [0, 18, 36, 56, 100]
-            labels_age_category = ['Anak-anak', 'Dewasa Muda', 'Dewasa', 'Lansia']
-            data_filtered_copy = data_filtered.copy()
-            data_filtered_copy['kategori_umur'] = pd.cut(
-                data_filtered_copy['umur'], bins=bins_age_category, 
-                labels=labels_age_category, right=False)
-
-            # Plotly Express Histogram
-            fig = px.histogram(data_filtered_copy, x="kategori_umur", color="kategori_umur", 
-                            title=f'Distribusi Kategori Umur {tahun}',
-                            labels={'kategori_umur': 'Kategori Umur', 'count': 'Jumlah Individu'},
-                            color_discrete_sequence=["#636CCB"])
-
-            # Remove background and hide legend
-            fig.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',  # Transparent background
-                paper_bgcolor='rgba(0,0,0,0)',  # Transparent paper background
-                showlegend=False,  # Hide legend
-                xaxis=dict(showgrid=False),  # Remove x-axis gridlines
-                yaxis=dict(showgrid=False)   # Remove y-axis gridlines
-            )
-
-            st.plotly_chart(fig)
-        
-        with col2:
-            st.write("*Kategori Umur:*")
-            st.write("- *Anak-anak*: 0-17 tahun")
-            st.write("- *Dewasa Muda*: 18-35 tahun") 
-            st.write("- *Dewasa*: 36-55 tahun")
-            st.write("- *Lansia*: 56+ tahun")
-        
+                
         # 2. Jenis Kelamin - Menggunakan Pie Chart
         # Mengubah kolom jenis_kelamin dari angka menjadi teks
         data_filtered['jenis_kelamin'] = data_filtered['jenis_kelamin'].map({1: 'Laki-laki', 2: 'Perempuan'})
@@ -721,34 +751,42 @@ if st.session_state.page_selection == "Data Pertahun":
         col1, col2 = st.columns([2, 1])
         
         with col1:
+            # Filter data untuk tahun yang dipilih
             data_generasi = data[data['tahun'] == tahun]
+            
+            # Urutan kategori generasi
             kategori_urutan = ['Generasi Alpha', 'Generasi Z', 'Milenial', 'Generasi X', 'Baby Boomers', 'Silent Generation']
             
+            # Kelompokkan berdasarkan generasi dan hitung total penimbang
             segment_generasi = data_generasi.groupby('generasi').apply(
                 lambda x: (x['penimbang'] * 1).sum()).reset_index(name='total_penimbang')
 
-            # Convert to percentage
+            # Menghitung persentase dari total penimbang
             segment_generasi['total_penimbang'] = (segment_generasi['total_penimbang'] / segment_generasi['total_penimbang'].sum()) * 100
 
-            # Plotly Express Bar Chart
+            # Membuat bar chart menggunakan Plotly Express
             fig = px.bar(segment_generasi, x='generasi', y='total_penimbang', color='generasi', 
                         title=f'Distribusi Generasi {tahun}',
                         labels={'generasi': 'Generasi', 'total_penimbang': 'Total Penimbang (%)'},
                         color_discrete_sequence=["#636CCB"])
 
-            # Remove background and hide legend
+            # Menyesuaikan layout grafik
             fig.update_layout(
-                plot_bgcolor='rgba(0,0,0,0)',  # Transparent background
-                paper_bgcolor='rgba(0,0,0,0)',  # Transparent paper background
-                showlegend=False,  # Hide legend
-                xaxis=dict(showgrid=False),  # Remove x-axis gridlines
-                yaxis=dict(showgrid=False)   # Remove y-axis gridlines
+                plot_bgcolor='rgba(0,0,0,0)',  # Latar belakang transparan
+                paper_bgcolor='rgba(0,0,0,0)',  # Latar belakang kertas transparan
+                showlegend=False,  # Menyembunyikan legenda
+                xaxis=dict(showgrid=False),  # Menghilangkan grid pada sumbu-X
+                yaxis=dict(showgrid=False)   # Menghilangkan grid pada sumbu-Y
             )
 
+            # Menampilkan grafik
             st.plotly_chart(fig)
+
+
 
     # Main logic
     tahun_terpilih = st.sidebar.selectbox("Pilih Tahun: ", options=data['tahun'].unique())
+    st.title(f"Data Pengangguran Kota Batu {tahun_terpilih}")
 
     # Display cards dan visualisasi untuk tahun yang dipilih
     if tahun_terpilih in data_tahun:
