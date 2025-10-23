@@ -186,8 +186,8 @@ def load_and_process_data():
                                       labels=labels_5_years, right=False)
     
     # Kategori umur
-    bins_age_category = [0, 18, 36, 56, 100]
-    labels_age_category = ['Anak-anak', 'Dewasa Muda', 'Dewasa', 'Lansia']
+    bins_age_category = [15, 30, 50, 70, 130]
+    labels_age_category = ['15-29', '30-49', '50-69', '70-99+']
     data['kategori_umur'] = pd.cut(data['umur'], bins=bins_age_category, 
                                    labels=labels_age_category, right=False)
     
@@ -225,7 +225,7 @@ def hitung_penimbang(data, kolom_kategori, kategori_urutan=None, filter_exclude=
             ordered=True
         )
         
-        # Buat DataFrame dengan 2022-2023 (termasuk yang nilai 0)
+        # Buat DataFrame dengan 2022-2024 (termasuk yang nilai 0)
         all_categories = pd.DataFrame(kategori_urutan, columns=[kolom_kategori])
         result = all_categories.merge(result, on=kolom_kategori, how='left').fillna({'total_penimbang': 0})
         
@@ -343,11 +343,11 @@ KATEGORI_CONFIG = {
         'exclude': None
     },
     'generasi': {
-        'urutan': ['Generasi Alpha', 'Generasi Z', 'Milenial', 'Generasi X', 'Baby Boomers', 'Silent Generation'],
+        'urutan': ['Silent Generation (1928-1945)', 'Baby Boomers (1946-1964)', 'Generasi X (1965-1980)', 'Milenial (1981-1996)', 'Generasi Z (1997-2009)', 'Generasi Alpha (2010-sekarang)'],
         'exclude': None
     },
     'kategori_umur': {
-        'urutan': ['Anak-anak', 'Dewasa Muda', 'Dewasa', 'Lansia'],
+        'urutan': ['15-29', '30-49', '50-69', '70-99+'],
         'exclude': None
     },
     'utama_pc': {
@@ -443,11 +443,11 @@ data_tahun = {
 # ============================================
 # Sidebar untuk filter tahun
 st.sidebar.header("Filter Data")
-tahun_options = ['2022-2023'] + sorted(data['tahun'].unique().tolist())
+tahun_options = ['2022-2024'] + sorted(data['tahun'].unique().tolist())
 tahun_selected = st.sidebar.selectbox('Pilih Tahun', tahun_options)
 
 # Filter data berdasarkan tahun yang dipilih
-if tahun_selected != '2022-2023':
+if tahun_selected != '2022-2024':
     data_filtered = data[data['tahun'] == tahun_selected].copy()
 else:
     data_filtered = data.copy()
@@ -465,8 +465,8 @@ st.title(f"Karakteristik Pengangguran di Kota Batu ({tahun_selected})")
 # st.markdown(f"##### Data Tahun: {tahun_selected}")
 
 # ============================================
-# CONTEN UNTUK 2022-2023
-if tahun_selected == '2022-2023':
+# CONTEN UNTUK 2022-2024
+if tahun_selected == '2022-2024':
     # Menyusun hasil persentase pengangguran - FIXED: Pakai data konsisten
     hasil_persentase = {
         "Tahun": ['2022', '2023', '2024'],
@@ -505,7 +505,7 @@ if tahun_selected == '2022-2023':
 # ============================================
 # VISUALISASI UNTUK DATA TAHUN TERTENTU
 # st.markdown("---")
-if tahun_selected != '2022-2023':
+if tahun_selected != '2022-2024':
     # Visualisasi lainnya untuk data tahun tertentu
     # st.header("📈 Analisis Demografis untuk Tahun {tahun_selected}")
     
@@ -518,7 +518,7 @@ if tahun_selected != '2022-2023':
     
     with col1:
         st.metric(
-            "Total Penduduk Usia Kerja", 
+            "JumlahPenduduk", 
             f"{info_tahun['total_penduduk']:,}"
         )
     
@@ -588,7 +588,7 @@ if tahun_selected != '2022-2023':
     
     with col1:
         # 3. KATEGORI UMUR (BAR CHART)
-        st.subheader("Berdasarkan Kategori Umur")
+        # st.subheader("Berdasarkan Kategori Umur")
         config = KATEGORI_CONFIG['kategori_umur']
         data_umur = hitung_penimbang(data_filtered, 'kategori_umur',
                                      config['urutan'], config['exclude'])
@@ -834,7 +834,7 @@ if tahun_selected != '2022-2023':
     # FOOTER SECTION
     # ========================================================================
     
-    st.success(f"✅ Tampilan 2022-2023 untuk tahun {tahun_selected} selesai!")
+    st.success(f"✅ Tampilan 2022-2024 untuk tahun {tahun_selected} selesai!")
     
     # Button untuk download data (opsional)
     if st.button("📥 Download Data Lengkap (CSV)"):
@@ -1003,10 +1003,10 @@ def buat_line_chart_multi_tahun(data_chart, kolom_x, kolom_y, kolom_kategori, ju
 
 
 # ============================================
-# TAMPILAN UNTUK "2022-2023"
+# TAMPILAN UNTUK "2022-2024"
 # ============================================
 
-if tahun_selected == '2022-2023':
+if tahun_selected == '2022-2024':
     
     st.markdown("---")
     
@@ -1041,86 +1041,87 @@ if tahun_selected == '2022-2023':
     df_summary = pd.DataFrame(data_summary)
     st.dataframe(df_summary, use_container_width=True, hide_index=True)
     
-    # Visualisasi tren
-    col1, col2 = st.columns(2)
+    # # Visualisasi tren
+    # col1 = st.columns(1)
     
-    with col1:
-        # Tren Jumlah Pengangguran
-        data_tren_absolut = pd.DataFrame({
-            'tahun': ['2022', '2023', '2024'],
-            'pengangguran': [
-                data_tahun[2022]['pengangguran_absolut'],
-                data_tahun[2023]['pengangguran_absolut'],
-                data_tahun[2024]['pengangguran_absolut']
-            ]
-        })
+    # with col1:
+    #     # Tren Jumlah Pengangguran
+    #     data_tren_absolut = pd.DataFrame({
+    #         'tahun': ['2022', '2023', '2024'],
+    #         'pengangguran': [
+    #             data_tahun[2022]['pengangguran_absolut'],
+    #             data_tahun[2023]['pengangguran_absolut'],
+    #             data_tahun[2024]['pengangguran_absolut']
+    #         ]
+    #     })
         
-        fig_tren = go.Figure()
-        fig_tren.add_trace(go.Scatter(
-            x=data_tren_absolut['tahun'],
-            y=data_tren_absolut['pengangguran'],
-            mode='lines+markers+text',
-            line=dict(color='#636CCB', width=3),
-            marker=dict(size=12),
-            text=data_tren_absolut['pengangguran'].apply(lambda x: f'{x:,.0f}'),
-            textposition='top center'
-        ))
+    #     fig_tren = go.Figure()
+    #     fig_tren.add_trace(go.Scatter(
+    #         x=data_tren_absolut['tahun'],
+    #         y=data_tren_absolut['pengangguran'],
+    #         mode='lines+markers+text',
+    #         line=dict(color='#636CCB', width=3),
+    #         marker=dict(size=12),
+    #         text=data_tren_absolut['pengangguran'].apply(lambda x: f'{x:,.0f}'),
+    #         textposition='top center'
+    #     ))
         
-        fig_tren.update_layout(
-            title='Tren Jumlah Pengangguran',
-            xaxis_title='Tahun',
-            yaxis_title='Jumlah Pengangguran',
-            plot_bgcolor='white',
-            height=400,
-            xaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
-            yaxis=dict(showgrid=True, gridcolor='#f3f4f6')
-        )
-        st.plotly_chart(fig_tren, use_container_width=True)
+    #     fig_tren.update_layout(
+    #         title='Tren Jumlah Pengangguran',
+    #         xaxis_title='Tahun',
+    #         yaxis_title='Jumlah Pengangguran',
+    #         plot_bgcolor='white',
+    #         height=400,
+    #         xaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
+    #         yaxis=dict(showgrid=True, gridcolor='#f3f4f6')
+    #     )
+    #     st.plotly_chart(fig_tren, use_container_width=True)
     
-    with col2:
-        # Tren TPAK dan TPT
-        data_tren_persen = pd.DataFrame({
-            'tahun': ['2022', '2023', '2024'],
-            'TPAK': [71.51, 78.99, 75.53],
-            'TPT': [
-                (data_tahun[2022]['pengangguran_absolut'] / data_tahun[2022]['total_angkatan_kerja']) * 100,
-                (data_tahun[2023]['pengangguran_absolut'] / data_tahun[2023]['total_angkatan_kerja']) * 100,
-                (data_tahun[2024]['pengangguran_absolut'] / data_tahun[2024]['total_angkatan_kerja']) * 100
-            ]
-        })
-        
-        fig_persen = go.Figure()
-        
-        fig_persen.add_trace(go.Scatter(
-            x=data_tren_persen['tahun'],
-            y=data_tren_persen['TPAK'],
-            name='TPAK',
-            mode='lines+markers',
-            line=dict(color='#10b981', width=3),
-            marker=dict(size=10)
-        ))
-        
-        fig_persen.add_trace(go.Scatter(
-            x=data_tren_persen['tahun'],
-            y=data_tren_persen['TPT'],
-            name='TPT',
-            mode='lines+markers',
-            line=dict(color='#ef4444', width=3, dash='dash'),
-            marker=dict(size=10, symbol='diamond')
-        ))
-        
-        fig_persen.update_layout(
-            title='Tren TPAK dan TPT',
-            xaxis_title='Tahun',
-            yaxis_title='Persentase (%)',
-            plot_bgcolor='white',
-            height=400,
-            xaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
-            yaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
-            legend=dict(x=0.02, y=0.98)
-        )
-        st.plotly_chart(fig_persen, use_container_width=True)
-    
+    # with col1:
+    #     # Tren TPAK dan TPT
+    data_tren_persen = pd.DataFrame({
+        'tahun': ['2022', '2023', '2024'],
+        'TPAK': [71.51, 78.99, 75.53],
+        'TPT': [
+            (data_tahun[2022]['pengangguran_absolut'] / data_tahun[2022]['total_angkatan_kerja']) * 100,
+            (data_tahun[2023]['pengangguran_absolut'] / data_tahun[2023]['total_angkatan_kerja']) * 100,
+            (data_tahun[2024]['pengangguran_absolut'] / data_tahun[2024]['total_angkatan_kerja']) * 100
+        ]
+    })
+
+    fig_persen = go.Figure()
+
+    fig_persen.add_trace(go.Scatter(
+        x=data_tren_persen['tahun'],
+        y=data_tren_persen['TPAK'],
+        name='TPAK',
+        mode='lines+markers',
+        line=dict(color='#10b981', width=3),
+        marker=dict(size=10)
+    ))
+
+    fig_persen.add_trace(go.Scatter(
+        x=data_tren_persen['tahun'],
+        y=data_tren_persen['TPT'],
+        name='TPT',
+        mode='lines+markers',
+        line=dict(color='#ef4444', width=3, dash='dash'),
+        marker=dict(size=10, symbol='diamond')
+    ))
+
+    fig_persen.update_layout(
+        title='Tren TPAK dan TPT',
+        xaxis_title='Tahun',
+        yaxis_title='Persentase (%)',
+        plot_bgcolor='white',
+        height=400,
+        xaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
+        yaxis=dict(showgrid=True, gridcolor='#f3f4f6'),
+        legend=dict(x=0.02, y=0.98)
+    )
+
+    st.plotly_chart(fig_persen, use_container_width=True)
+
     st.markdown("---")
     
     # ========================================================================
@@ -1165,16 +1166,25 @@ if tahun_selected == '2022-2023':
     
     with col1:
         # KATEGORI UMUR
+        # config = KATEGORI_CONFIG['kategori_umur']
+        # data_umur_multi = hitung_penimbang_per_tahun(data, 'kategori_umur')
+        
+        # fig_umur_multi = buat_line_chart_multi_tahun(
+        #     data_umur_multi, 'tahun', 'total_penimbang', 'kategori_umur',
+        #     'Tren Kategori Umur (2022-2024)',
+        #     'Tahun'
+        # )
+        # st.plotly_chart(fig_umur_multi, use_container_width=True)
+    
         config = KATEGORI_CONFIG['kategori_umur']
         data_umur_multi = hitung_penimbang_per_tahun(data, 'kategori_umur')
         
-        fig_umur_multi = buat_line_chart_multi_tahun(
-            data_umur_multi, 'tahun', 'total_penimbang', 'kategori_umur',
-            'Tren Kategori Umur (2022-2024)',
-            'Tahun'
+        fig_umur_multi = buat_grouped_bar_chart(
+            data_umur_multi, 'kategori_umur', 'total_penimbang', 'tahun',
+            'Distribusi Kategori Umur (2022-2024)',
+            'Kategori Umur', rotasi_x=45
         )
         st.plotly_chart(fig_umur_multi, use_container_width=True)
-    
     with col2:
         # GENERASI - Grouped Bar
         config = KATEGORI_CONFIG['generasi']
@@ -1304,7 +1314,7 @@ if tahun_selected == '2022-2023':
     if st.button("📥 Download Data Komparatif Lengkap"):
         csv = data.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="Download CSV (2022-2023)",
+            label="Download CSV (2022-2024)",
             data=csv,
             file_name='data_pengangguran_2022_2024.csv',
             mime='text/csv'
