@@ -155,26 +155,26 @@ def load_and_process_data():
         age = row['umur']
         
         if current_year == 2022:
-            if age <= 9: return 'Generasi Alpha'
-            elif 10 <= age <= 25: return 'Generasi Z'
-            elif 26 <= age <= 41: return 'Milenial'
-            elif 42 <= age <= 57: return 'Generasi X'
-            elif 58 <= age <= 76: return 'Baby Boomers'
-            else: return 'Silent Generation'
+            if age <= 9: return 'Generasi Alpha (2010-sekarang)'
+            elif 10 <= age <= 25: return 'Generasi Z (1997-2009)'
+            elif 26 <= age <= 41: return 'Milenial (1981-1996)'
+            elif 42 <= age <= 57: return 'Generasi X (1965-1980)'
+            elif 58 <= age <= 76: return 'Baby Boomers (1946-1964)'
+            else: return 'Silent Generation (1928-1945)'
         elif current_year == 2023:
-            if age <= 10: return 'Generasi Alpha'
-            elif 11 <= age <= 26: return 'Generasi Z'
-            elif 27 <= age <= 42: return 'Milenial'
-            elif 43 <= age <= 58: return 'Generasi X'
-            elif 59 <= age <= 77: return 'Baby Boomers'
-            else: return 'Silent Generation'
+            if age <= 10: return 'Generasi Alpha (2010-sekarang)'
+            elif 11 <= age <= 26: return 'Generasi Z (1997-2009)'
+            elif 27 <= age <= 42: return 'Milenial (1981-1996)'
+            elif 43 <= age <= 58: return 'Generasi X (1965-1980)'
+            elif 59 <= age <= 77: return 'Baby Boomers (1946-1964)'
+            else: return 'Silent Generation (1928-1945)'
         else:  # 2024
-            if age <= 11: return 'Generasi Alpha'
-            elif 12 <= age <= 27: return 'Generasi Z'
-            elif 28 <= age <= 43: return 'Milenial'
-            elif 44 <= age <= 59: return 'Generasi X'
-            elif 60 <= age <= 78: return 'Baby Boomers'
-            else: return 'Silent Generation'
+            if age <= 11: return 'Generasi Alpha (2010-sekarang)'
+            elif 12 <= age <= 27: return 'Generasi Z (1997-2009)'
+            elif 28 <= age <= 43: return 'Milenial (1981-1996)'
+            elif 44 <= age <= 59: return 'Generasi X (1965-1980)'
+            elif 60 <= age <= 78: return 'Baby Boomers (1946-1964)'
+            else: return 'Silent Generation (1928-1945)'
     
     data['generasi'] = data.apply(assign_generation, axis=1)
     
@@ -245,16 +245,19 @@ def buat_bar_chart(data_chart, kolom_x, kolom_y, judul, xlabel, ylabel='Persenta
     # Hitung persentase per kategori
     data_chart['persentase'] = (data_chart[kolom_y] / total_penimbang) * 100
     
+    # Cari nilai persentase maksimum untuk menentukan range Y
+    max_persentase = data_chart['persentase'].max()
+    
     fig = go.Figure()
     
     # Tambahkan bar trace
     fig.add_trace(go.Bar(
         x=data_chart[kolom_x],
-        y=data_chart['persentase'],  # Menggunakan persentase di sumbu Y
+        y=data_chart['persentase'],
         marker_color=warna,
         text=data_chart['persentase'].apply(lambda x: f'{x:.1f}%') if tampilkan_nilai else None,
         textposition='outside',
-        hovertemplate='<b>%{x}</b><br>%{y:,.1f}%<extra></extra>'  # Menampilkan persentase di hover
+        hovertemplate='<b>%{x}</b><br>%{y:,.1f}%<extra></extra>'
     ))
     
     # Update layout
@@ -265,7 +268,7 @@ def buat_bar_chart(data_chart, kolom_x, kolom_y, judul, xlabel, ylabel='Persenta
         plot_bgcolor='white',
         paper_bgcolor='white',
         height=400,
-        margin=dict(l=50, r=20, t=60, b=100),
+        margin=dict(l=50, r=20, t=80, b=100),  # Tambah margin top dari 60 ke 80
         xaxis=dict(
             showgrid=False,
             showline=True,
@@ -274,9 +277,8 @@ def buat_bar_chart(data_chart, kolom_x, kolom_y, judul, xlabel, ylabel='Persenta
         ),
         yaxis=dict(
             showgrid=False,
-            # gridcolor='#f3f4f6',
             showline=False,
-            # linecolor='#e5e7eb'
+            range=[0, max_persentase * 1.15]  # Tambah 15% ruang di atas untuk label
         )
     )
     
@@ -550,7 +552,7 @@ if tahun_selected != '2022-2024':
     
     with col1:
         # 1. JENIS KELAMIN (PIE CHART)
-        st.subheader("Berdasarkan Jenis Kelamin")
+        # st.subheader("Berdasarkan Jenis Kelamin")
         config = KATEGORI_CONFIG['jenis_kelamin']
         data_jk = hitung_penimbang(data_filtered, 'jenis_kelamin', 
                                    config['urutan'], config['exclude'])
@@ -564,7 +566,7 @@ if tahun_selected != '2022-2024':
     
     with col2:
         # 2. STATUS PERKAWINAN (BAR CHART)
-        st.subheader("Berdasarkan Status Perkawinan")
+        # st.subheader("Berdasarkan Status Perkawinan")
         config = KATEGORI_CONFIG['status_perkawinan']
         data_sp = hitung_penimbang(data_filtered, 'status_perkawinan',
                                    config['urutan'], config['exclude'])
@@ -602,7 +604,7 @@ if tahun_selected != '2022-2024':
     
     with col2:
         # 4. GENERASI (BAR CHART)
-        st.subheader("Berdasarkan Generasi")
+        # st.subheader("Berdasarkan Generasi")
         config = KATEGORI_CONFIG['generasi']
         data_gen = hitung_penimbang(data_filtered, 'generasi',
                                     config['urutan'], config['exclude'])
@@ -623,7 +625,8 @@ if tahun_selected != '2022-2024':
     st.header("🎓 Distribusi Berdasarkan Pendidikan")
     
     # 5. PENDIDIKAN TERTINGGI (BAR CHART FULL WIDTH)
-    st.subheader("Berdasarkan Pendidikan Tertinggi")
+
+    
     config = KATEGORI_CONFIG['pendidikan_tertinggi']
     data_pend = hitung_penimbang(data_filtered, 'pendidikan_tertinggi',
                                  config['urutan'], config['exclude'])
@@ -649,7 +652,7 @@ if tahun_selected != '2022-2024':
     with col1:
         # 6. PARTISIPASI SEKOLAH (jika ada di data)
         if 'partisipasi_sekolah' in data_filtered.columns:
-            st.subheader("Berdasarkan Partisipasi Sekolah")
+            # st.subheader("Berdasarkan Partisipasi Sekolah")
             data_part = hitung_penimbang(data_filtered, 'partisipasi_sekolah')
             
             fig_part = buat_bar_chart(
@@ -662,7 +665,7 @@ if tahun_selected != '2022-2024':
     with col2:
         # 7. PERNAH PELATIHAN (jika ada di data)
         if 'pernah_pelatihan' in data_filtered.columns:
-            st.subheader("Berdasarkan Pernah Pelatihan")
+            # st.subheader("Berdasarkan Pernah Pelatihan")
             data_latih = hitung_penimbang(data_filtered, 'pernah_pelatihan')
             
             fig_latih = buat_pie_chart(
@@ -685,7 +688,7 @@ if tahun_selected != '2022-2024':
     with col1:
         # 8. KLASIFIKASI DESA/KOTA
         if 'klasifikasi_desa_kota' in data_filtered.columns:
-            st.subheader("Berdasarkan Klasifikasi Desa/Kota")
+            # st.subheader("Berdasarkan Klasifikasi Desa/Kota")
             data_lokasi = hitung_penimbang(data_filtered, 'klasifikasi_desa_kota')
             
             fig_lokasi = buat_pie_chart(
@@ -698,7 +701,7 @@ if tahun_selected != '2022-2024':
     with col2:
         # 9. HUBUNGAN DENGAN KRT
         if 'hubungan_dengan_krt' in data_filtered.columns:
-            st.subheader("Berdasarkan Hubungan dengan KRT")
+            # st.subheader("Berdasarkan Hubungan dengan KRT")
             data_krt = hitung_penimbang(data_filtered, 'hubungan_dengan_krt')
             
             # Sort by total_penimbang untuk bar chart
@@ -724,7 +727,7 @@ if tahun_selected != '2022-2024':
     with col1:
         # 10. KERJA SEBELUMNYA
         if 'kerja_sebelumnya' in data_filtered.columns:
-            st.subheader("Berdasarkan Pernah Bekerja Sebelumnya")
+            # st.subheader("Berdasarkan Pernah Bekerja Sebelumnya")
             data_kerja = hitung_penimbang(data_filtered, 'kerja_sebelumnya')
             
             fig_kerja = buat_pie_chart(
@@ -737,7 +740,7 @@ if tahun_selected != '2022-2024':
     with col2:
         # 11. TERDAFTAR PRAKERJA
         if 'terdaftar_prakerja' in data_filtered.columns:
-            st.subheader("Berdasarkan Terdaftar Prakerja")
+            # st.subheader("Berdasarkan Terdaftar Prakerja")
             data_prakerja = hitung_penimbang(data_filtered, 'terdaftar_prakerja')
             
             fig_prakerja = buat_pie_chart(
@@ -749,7 +752,7 @@ if tahun_selected != '2022-2024':
     
     # 12. ALASAN BERHENTI KERJA (jika pernah bekerja)
     if 'alasan_berhenti_kerja' in data_filtered.columns:
-        st.subheader("Berdasarkan Alasan Berhenti Kerja")
+        # st.subheader("Berdasarkan Alasan Berhenti Kerja")
         
         # Filter hanya yang pernah bekerja
         data_berhenti_raw = data_filtered[data_filtered['kerja_sebelumnya'] == 'Ya'].copy()
@@ -781,7 +784,7 @@ if tahun_selected != '2022-2024':
     with col1:
         # 16. DISABILITAS PENGLIHATAN
         if 'disabilitas_penglihatan' in data_filtered.columns:
-            st.subheader("Disabilitas Penglihatan")
+            # st.subheader("Disabilitas Penglihatan")
             data_lihat = hitung_penimbang(data_filtered, 'disabilitas_penglihatan')
             
             fig_lihat = buat_bar_chart(
@@ -793,7 +796,7 @@ if tahun_selected != '2022-2024':
         
         # 17. DISABILITAS PENDENGARAN
         if 'disabilitas_pendengaran' in data_filtered.columns:
-            st.subheader("Disabilitas Pendengaran")
+            # st.subheader("Disabilitas Pendengaran")
             data_dengar = hitung_penimbang(data_filtered, 'disabilitas_pendengaran')
             
             fig_dengar = buat_bar_chart(
@@ -806,7 +809,7 @@ if tahun_selected != '2022-2024':
     with col2:
         # 18. DISABILITAS TANGAN
         if 'disabilitas_tangan' in data_filtered.columns:
-            st.subheader("Disabilitas Menggerakkan Tangan")
+            # st.subheader("Disabilitas Menggerakkan Tangan")
             data_tangan = hitung_penimbang(data_filtered, 'disabilitas_tangan')
             
             fig_tangan = buat_bar_chart(
@@ -818,7 +821,7 @@ if tahun_selected != '2022-2024':
         
         # 19. DISABILITAS KOMUNIKASI
         if 'disabilitas_komunikasi' in data_filtered.columns:
-            st.subheader("Disabilitas Komunikasi")
+            # st.subheader("Disabilitas Komunikasi")
             data_komunikasi = hitung_penimbang(data_filtered, 'disabilitas_komunikasi')
             
             fig_komunikasi = buat_bar_chart(
